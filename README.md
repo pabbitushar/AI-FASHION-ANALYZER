@@ -1,118 +1,147 @@
-# 🧠 StyleSense AI
+# StyleSense AI
 
-AI-powered fashion analysis. Upload an outfit photo → get real clothing detection, color analysis, and style classification.
+> Analyze an outfit. Understand its composition. Explore its style.
+
+StyleSense AI is a fashion-analysis web application that takes an outfit image and identifies clothing items, analyzes dominant colors, and generates a style classification.
+
+## Overview
+
+Upload an outfit image and the application:
+
+1. Detects clothing and fashion-related objects
+2. Extracts dominant colors
+3. Analyzes the detected clothing and colors
+4. Generates a style classification
 
 ## Architecture
 
-```
-Browser (localhost:5173)
-   ↓
-React Frontend (Vite + Tailwind + Framer Motion)
-   ↓
-Python Backend (FastAPI, localhost:8000)
-   ↓
-Google Colab ML Backend (ngrok tunnel)
-   → YOLOS-Fashionpedia model (27 clothing categories)
-   → K-Means color extraction
-   → Rule-based style classification
-```
-
-## Quick Start
-
-### 1. Start the Colab ML Backend (for real detection)
-
-1. Open [Google Colab](https://colab.research.google.com)
-2. **File → Upload notebook** → upload `colab/stylesense_colab.py`
-3. **Runtime → Change runtime type → GPU** (T4 is fine)
-4. Get a free ngrok token: https://dashboard.ngrok.com/signup
-5. Paste the token in the `NGROK_AUTH_TOKEN` variable in the notebook
-6. **Run All** (Ctrl+F9)
-7. Copy the printed ngrok URL (e.g. `https://abc123.ngrok-free.app`)
-
-### 2. Configure the local backend
-
-```powershell
-cd backend
-copy .env.example .env
+```text
+Browser
+   │
+   ▼
+React + Vite
+   │
+   ▼
+FastAPI Backend
+   │
+   ▼
+Analysis Service
+   │
+   ▼
+Google Colab
+   │
+   ├── YOLOS-Fashionpedia
+   │       └── Clothing Detection
+   │
+   ├── K-Means
+   │       └── Color Extraction
+   │
+   └── Rule-Based Logic
+           └── Style Classification
 ```
 
-Edit `.env` and paste your Colab URL:
-```
-COLAB_API_URL=https://abc123.ngrok-free.app
-DEMO_MODE=true
-```
+## Features
 
-> With `COLAB_API_URL` set, the backend uses Colab for real analysis and only falls back to demo mode if Colab is unreachable.
+* Clothing and accessory detection
+* 27 fashion categories
+* Dominant color extraction
+* Detection confidence scores
+* Style classification
+* Responsive interface
+* Demo mode
+* GPU-based inference through Google Colab
 
-### 3. Install & run
+## Tech Stack
 
-**Terminal 1 — Backend:**
-```powershell
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
+**Frontend**
 
-**Terminal 2 — Frontend:**
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+React · TypeScript · Vite · Tailwind CSS · Framer Motion
 
-### 4. Open the app
+**Backend**
 
-👉 **http://localhost:5173**
+Python · FastAPI · Pydantic
 
----
+**Computer Vision**
 
-## Without Colab (Demo Mode)
+YOLOS-Fashionpedia · K-Means clustering
 
-If you don't set `COLAB_API_URL`, the app runs in demo mode — returns preset results for any image. Useful for testing the UI.
+**Infrastructure**
+
+Google Colab · ngrok
+
+## Detection Categories
+
+The current model supports 27 fashion categories:
+
+| Clothing       | Accessories | Footwear |
+| -------------- | ----------- | -------- |
+| Shirt / Blouse | Glasses     | Shoes    |
+| T-Shirt        | Hat         | Socks    |
+| Sweater        | Headband    | Tights   |
+| Cardigan       | Tie         |          |
+| Jacket         | Gloves      |          |
+| Vest           | Watch       |          |
+| Pants          | Belt        |          |
+| Shorts         | Bag         |          |
+| Skirt          | Scarf       |          |
+| Coat           | Umbrella    |          |
+| Dress          |             |          |
+| Jumpsuit       |             |          |
+| Cape           |             |          |
 
 ## Project Structure
 
-```
+```text
+StyleSense-AI/
+│
 ├── colab/
-│   └── stylesense_colab.py    ← Upload this to Google Colab
+│   └── stylesense_colab.py
+│
 ├── backend/
-│   ├── main.py                ← FastAPI entry point
-│   ├── config.py              ← Environment config
-│   ├── api/routes.py          ← API endpoints
-│   ├── models/schemas.py      ← Pydantic data models
+│   ├── main.py
+│   ├── config.py
+│   ├── api/
+│   ├── models/
 │   ├── services/
-│   │   └── analysis_service.py ← Orchestrator (Colab → YOLO → Demo)
 │   ├── ml/
-│   │   ├── base.py            ← Abstract FashionAnalyzer interface
-│   │   ├── colab_analyzer.py  ← Bridges to Colab API
-│   │   ├── yolo_analyzer.py   ← Local YOLO (stub for future)
-│   │   ├── demo_analyzer.py   ← Mock results for testing
-│   │   └── color_extractor.py ← K-Means color extraction
-│   └── utils/image_utils.py   ← Image validation
+│   └── utils/
+│
 ├── frontend/
-│   ├── src/
-│   │   ├── components/        ← React UI components
-│   │   ├── hooks/             ← useAnalysis state hook
-│   │   ├── services/api.ts    ← API client
-│   │   ├── types/             ← TypeScript interfaces
-│   │   └── pages/Home.tsx     ← Main page
-│   └── ...
-├── models/                    ← Place YOLO .pt files here (future)
-└── .env.example
+│   └── src/
+│       ├── components/
+│       ├── hooks/
+│       ├── pages/
+│       ├── services/
+│       └── types/
+│
+├── models/
+├── .env.example
+└── README.md
 ```
 
-## Analyzer Priority
+## Setup
 
-The backend tries analyzers in this order:
+### 1. Start the Colab inference service
 
-1. **Colab** — if `COLAB_API_URL` is set and reachable → real ML analysis
-2. **Local YOLO** — if `DEMO_MODE=false` and model file exists → local inference
-3. **Demo** — preset results (always available)
+Upload:
 
-## What the ML Detects
+```text
+colab/stylesense_colab.py
+```
 
-The Fashionpedia model recognizes 27 categories:
+to Google Colab.
 
-| Clothing | Accessories | Footwear |
-|----------|------------|----------|
-| Shirt/Blouse, T-Shirt, Sweater, Cardigan, Jacket, Vest, Pants, Shorts, Skirt, Coat, Dress, Jumpsuit, Cape | Glasses, Hat, Headband, Tie, Gloves, Watch, Belt, Bag, Scarf, Umbrella | Shoes, Socks, Tights |
+Enable GPU:
+
+```text
+Runtime → Change runtime type → GPU
+```
+
+Add your ngrok authentication token and run the notebook.
+
+Copy the generated ngrok URL.
+
+### 2. Configure the backend
+
+```powershell
+```
